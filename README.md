@@ -1,7 +1,7 @@
 ## Clone Project
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/dataiyeumenh/demo-db-prm393.git
 cd DEMO_DB_FLUTTER
 ```
 
