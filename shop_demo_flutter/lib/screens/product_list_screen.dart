@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import '../models/product_model.dart';
 import '../services/api_service.dart';
 import 'product_form_screen.dart';
+import 'product_detail_screen.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -48,16 +49,20 @@ class _ProductListScreenState extends State<ProductListScreen> {
       ),
     );
 
-    if (confirm != true) return;
+    // Đã bọc ngoặc nhọn {} để sửa cảnh báo curly_braces_in_flow_control_structures
+    if (confirm != true) {
+      return;
+    }
 
     await ApiService.deleteProduct(product.id);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Xóa sản phẩm thành công')));
-
+    ).showSnackBar(const SnackBar(content: Text('Xóa thành công')));
     _refresh();
   }
 
@@ -66,33 +71,29 @@ class _ProductListScreenState extends State<ProductListScreen> {
       context,
       MaterialPageRoute(builder: (_) => ProductFormScreen(product: product)),
     );
-
     if (changed == true) {
       _refresh();
     }
   }
 
-  String _formatPrice(double price) {
-    return '${price.toStringAsFixed(0)} đ';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Shop Demo'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Nintendo Game Store'),
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
           if (snapshot.hasError) {
             return Center(child: Text('Lỗi: ${snapshot.error}'));
           }
 
           final products = snapshot.data ?? [];
-
           if (products.isEmpty) {
             return const Center(child: Text('Chưa có sản phẩm nào'));
           }
@@ -104,69 +105,128 @@ class _ProductListScreenState extends State<ProductListScreen> {
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
-
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
                   clipBehavior: Clip.antiAlias,
                   elevation: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (product.imageUrl != null &&
-                          product.imageUrl!.isNotEmpty)
-                        Image.network(
-                          product.imageUrl!,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            height: 180,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.broken_image, size: 48),
-                          ),
+                  child: InkWell(
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ProductDetailScreen(productId: product.id),
                         ),
-                      Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product.name,
-                              style: Theme.of(context).textTheme.titleLarge,
+                      );
+                      _refresh();
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (product.imageUrl != null &&
+                            product.imageUrl!.isNotEmpty)
+                          Image.network(
+                            product.imageUrl!,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            // Sửa cảnh báo unnecessary_underscores tại đây
+                            errorBuilder: (ctx, err, stack) => Container(
+                              height: 180,
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.broken_image, size: 48),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _formatPrice(product.price),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                // FIX lỗi MainAxisAlignment.between -> spaceBetween
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Chip(
+                                    label: Text(
+                                      product.categoryName,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        product.avgRating > 0
+                                            ? '${product.avgRating.toStringAsFixed(1)} (${product.reviewCount})'
+                                            : 'Chưa có đánh giá',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ),
-                            if (product.description != null &&
-                                product.description!.isNotEmpty) ...[
                               const SizedBox(height: 8),
-                              Text(product.description!),
-                            ],
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton.icon(
-                                  onPressed: () => _openForm(product: product),
-                                  icon: const Icon(Icons.edit),
-                                  label: const Text('Sửa'),
+                              Text(
+                                product.name,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${product.price.toStringAsFixed(0)} đ',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
                                 ),
-                                const SizedBox(width: 8),
-                                TextButton.icon(
-                                  onPressed: () => _deleteProduct(product),
-                                  icon: const Icon(Icons.delete),
-                                  label: const Text('Xóa'),
+                              ),
+                              if (product.description != null &&
+                                  product.description!.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  product.description!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () =>
+                                        _openForm(product: product),
+                                    icon: const Icon(Icons.edit),
+                                    label: const Text('Sửa'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () => _deleteProduct(product),
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    label: const Text(
+                                      'Xóa',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -177,7 +237,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
         icon: const Icon(Icons.add),
-        label: const Text('Thêm'),
+        label: const Text('Thêm Game'),
       ),
     );
   }
