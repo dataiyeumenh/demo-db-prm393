@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.json({ success: true, message: "Nintendo Store 3-Table API is running" });
+  res.json({ success: true, message: "Flutter Demo API is running" });
 });
 
 // 1. API LẤY DANH SÁCH THỂ LOẠI (Để hiển thị Dropdown lựa chọn ở Flutter)
@@ -92,12 +92,10 @@ app.post("/api/products", async (req, res) => {
   try {
     const { category_id, name, price, description, image_url } = req.body;
     if (!category_id || !name || price == null) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Category, name and price are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Category, name and price are required",
+      });
     }
 
     const [result]: any = await pool.query(
@@ -181,12 +179,10 @@ app.post("/api/products/:id/reviews", async (req, res) => {
     const { reviewer_name, rating, comment } = req.body;
 
     if (!reviewer_name || !rating) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Reviewer name and rating are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Reviewer name and rating are required",
+      });
     }
 
     await pool.query(

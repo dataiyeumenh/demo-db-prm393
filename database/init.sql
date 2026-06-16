@@ -2,16 +2,15 @@ DROP DATABASE IF EXISTS flutter_demo_db;
 CREATE DATABASE flutter_demo_db;
 USE flutter_demo_db;
 
--- 1. BẢNG THỂ LOẠI (CATEGORIES)
+
 CREATE TABLE categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL
 );
 
--- 2. BẢNG SẢN PHẨM / GAME (PRODUCTS)
 CREATE TABLE products (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  category_id INT NOT NULL, -- Khóa ngoại liên kết thể loại
+  category_id INT NOT NULL,
   name VARCHAR(100) NOT NULL,
   price DECIMAL(10,2) NOT NULL,
   description TEXT,
@@ -20,10 +19,9 @@ CREATE TABLE products (
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
--- 3. BẢNG ĐÁNH GIÁ (REVIEWS)
 CREATE TABLE reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  product_id INT NOT NULL, -- Khóa ngoại liên kết sản phẩm
+  product_id INT NOT NULL,
   reviewer_name VARCHAR(100) NOT NULL,
   rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment TEXT,
@@ -31,7 +29,6 @@ CREATE TABLE reviews (
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
--- NẠP DỮ LIỆU MẪU
 INSERT INTO categories (id, name) VALUES 
 (1, 'Party / Casual'),
 (2, 'RPG / Adventure');
